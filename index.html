@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SSL Certificate End Date</title>
+  </head>
+  <body>
+    <input type="file" id="fileInput" accept=".der" />
+    <div id="endDate"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/node-forge/0.10.0/forge.min.js"></script>
+    <script>
+      function derToPem(derData) {
+        console.log(derData, "*");
+        const binaryString = atob(derData);
+        let pem = "-----BEGIN CERTIFICATE-----\n";
+        for (let i = 0; i < binaryString.length; i += 64) {
+          pem += binaryString.slice(i, i + 64) + "\n";
+        }
+        pem += "-----END CERTIFICATE-----\n";
+        return pem;
+      }
+
+      document
+        .getElementById("fileInput")
+        .addEventListener("change", function (event) {
+          const file = event.target.files[0];
+          const reader = new FileReader();
+
+          reader.onload = function () {
+            const derContents = reader.result;
+            const pemContents = derToPem(derContents);
+            const cert = forge.pki.certificateFromPem(pemContents);
+            const endDate = cert.validity.notAfter;
+
+            document.getElementById("endDate").textContent =
+              "Certificate End Date: " + endDate.toLocaleString();
+          };
+
+          reader.readAsBinaryString(file);
+        });
+    </script>
+  </body>
+</html>
